@@ -56,6 +56,32 @@ def create_app() -> Flask:
         if request.method in {"POST", "PUT", "PATCH"} and not request.is_json:
             return jsonify({"error": "JSON body is required"}), 400
 
+    @app.post("/auth/register")
+    def register():
+        payload = request.get_json(silent=True) or {}
+        username = (payload.get("username") or "").strip()
+        password = payload.get("password") or ""
+
+        if not username or not password:
+            return jsonify({"error": "username and password are required"}), 400
+
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "username already exists"}), 409
+
+        user = User(username=username)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        token = create_access_token(
+            identity=user.username,
+            additional_claims={"role": user.role},
+        )
+        return (
+            jsonify({"message": "user registered", "access_token": token}),
+            201,
+        )
+
     @app.post("/auth/login")
     def login():
         payload = request.get_json(silent=True) or {}
