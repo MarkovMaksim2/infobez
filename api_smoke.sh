@@ -65,8 +65,10 @@ echo "7) List notes with JWT"
 curl -sS "${BASE_URL}/api/notes" -H "Authorization: Bearer ${token}" | jq . || true
 echo
 
-echo "8) Access protected endpoint with invalid JWT (should be 401)"
-curl -sS "${BASE_URL}/api/data" -H "Authorization: Bearer invalid-jwt-token" | jq . || true
+echo "8) Access protected endpoint with invalid JWT"
+access_status=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/api/data" -H "Authorization: Bearer invalid-jwt-token")
+echo "Status: ${access_status}"
+
 echo
 
 echo "All steps completed."
